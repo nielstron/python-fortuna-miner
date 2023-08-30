@@ -2,7 +2,7 @@ import dataclasses
 import json
 import random
 import time
-from copy import copy
+from copy import copy, deepcopy
 from hashlib import sha256
 from pathlib import Path
 from typing import List
@@ -169,7 +169,7 @@ def main(preview: bool, mine: bool):
             while True:
                 i += 1
                 if time.time() - last_time > 10:
-                    print(f"New block not found in 10 seconds, updating state after {i} tries")
+                    # print(f"New block not found in 10 seconds, updating state after {i} tries")
                     i = 0
                     last_time = time.time()
                     validator_out_ref_new = [
@@ -259,9 +259,10 @@ def main(preview: bool, mine: bool):
             builder.ttl = builder.validity_start + 1000
             builder.add_minting_script(script_utxo, Redeemer(PlutusData()))
             builder.mint = MultiAsset({script_hash: Asset({AssetName(b"TUNA"): 5_000_000_000})})
-            new_output = copy(validator_out_ref.output)
+            new_output = deepcopy(validator_out_ref.output)
             new_output.datum = post_datum
             builder.add_output(new_output)
+            builder.add_input_address(payment_address)
 
             # Sign the transaction
             payment_vkey, payment_skey, _ = get_signing_info("miner")

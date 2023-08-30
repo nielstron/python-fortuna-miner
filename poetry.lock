@@ -70,6 +70,17 @@ files = [
 requests = "*"
 
 [[package]]
+name = "cachetools"
+version = "5.3.1"
+description = "Extensible memoizing collections and decorators"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "cachetools-5.3.1-py3-none-any.whl", hash = "sha256:95ef631eeaea14ba2e36f06437f36463aac3a096799e876ee55e5cdccb102590"},
+    {file = "cachetools-5.3.1.tar.gz", hash = "sha256:dce83f2d9b4e1f732a8cd44af8e8fab2dbe46201467fc98b3ef8f269092bf62b"},
+]
+
+[[package]]
 name = "cbor2"
 version = "5.4.6"
 description = "CBOR (de)serializer with extensive tag support"
@@ -683,24 +694,29 @@ name = "pycardano"
 version = "0.9.0"
 description = "A Cardano library in Python"
 optional = false
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "pycardano-0.9.0-py3-none-any.whl", hash = "sha256:f4c3405df35a38d999f038c41f2b7f20e8433d9a306e50c3e0398b2a4462c3ed"},
-    {file = "pycardano-0.9.0.tar.gz", hash = "sha256:ab7163b9de7e648b16f024eb22e07896c407c36a59161079ebd05ca5d6657a7d"},
-]
+python-versions = "^3.7"
+files = []
+develop = false
 
 [package.dependencies]
 blockfrost-python = "0.5.3"
-cbor2 = ">=5.4.3,<6.0.0"
+cachetools = "^5.3.0"
+cbor2 = "^5.4.3"
 cose = "0.9.dev8"
-ECPy = ">=1.2.5,<2.0.0"
-frozendict = ">=2.3.8,<3.0.0"
-frozenlist = ">=1.3.3,<2.0.0"
-mnemonic = ">=0.20,<0.21"
-pprintpp = ">=0.4.0,<0.5.0"
-PyNaCl = ">=1.5.0,<2.0.0"
-typeguard = ">=2.13.3,<3.0.0"
-websocket-client = ">=1.4.1,<2.0.0"
+ECPy = "^1.2.5"
+frozendict = "^2.3.8"
+frozenlist = "^1.3.3"
+mnemonic = "^0.20"
+pprintpp = "^0.4.0"
+PyNaCl = "^1.5.0"
+typeguard = "^2.13.3"
+websocket-client = "^1.4.1"
+
+[package.source]
+type = "git"
+url = "https://github.com/Python-Cardano/pycardano"
+reference = "main"
+resolved_reference = "a88d7250e0096ae45228d066ad4d2aed50abfb68"
 
 [[package]]
 name = "pycparser"
@@ -916,4 +932,4 @@ test = ["pytest (>=6.0.0)", "setuptools (>=65)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8, <3.11"
-content-hash = "ae491050c8b34c1113715d553c0ddd86723b4596fbe3b64b6400f7badb6c687c"
+content-hash = "427e6e85fd00133dcc1bdb1eaffd0f63967684d6d99655a590a5c49838ecb02d"
