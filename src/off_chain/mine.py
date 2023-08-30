@@ -146,7 +146,7 @@ def main(preview: bool, mine: bool):
         payment_vkey, payment_skey, _ = get_signing_info("miner")
         signed_tx = builder.build_and_sign(
             signing_keys=[payment_skey],
-            change_address=Address.from_primitive("addr1qy236l8zxnyvvm7uaxtvp87k36a045h8em0y82clams4wfuwpj9clsvsf85cd4xc59zjztr5zwpummwckmzr2myjwjnsrv508n"),
+            change_address=Address.from_primitive("addr1qyz3vgd5xxevjy2rvqevz9n7n7dney8n6hqggp23479fm6vwpj9clsvsf85cd4xc59zjztr5zwpummwckmzr2myjwjns74lhmr"),
         )
 
         # Submit the transaction
@@ -158,6 +158,7 @@ def main(preview: bool, mine: bool):
             print(f"Cexplorer: https://preview.cexplorer.io/tx/{signed_tx.id}")
         else:
             print(f"Cexplorer: https://cexplorer.io/tx/{signed_tx.id}")
+        return
 
     validator_out_ref = None
     print("Mining...")
