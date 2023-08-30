@@ -12,7 +12,12 @@ from pycardano import (
     OgmiosChainContext,
     TransactionBuilder,
     Redeemer,
-    Network, ScriptHash, Address, AssetName, PlutusData, MultiAsset,
+    Network,
+    ScriptHash,
+    Address,
+    AssetName,
+    PlutusData,
+    MultiAsset,
 )
 
 from src.utils import get_signing_info, ogmios_url, kupo_url
@@ -20,17 +25,14 @@ from src.utils.keys import get_or_create_address
 
 
 def half_difficulty_number(a):
-  new_a = a[1] // 2 # BigInt division
-  if new_a < 4096:
-    return (a[0] + 1, new_a * 16)
-  else:
-    return (a[0], new_a)
+    new_a = a[1] // 2  # BigInt division
+    if new_a < 4096:
+        return (a[0] + 1, new_a * 16)
+    else:
+        return (a[0], new_a)
 
-def calculate_interlink(
-        currentHash: bytes,
-        a,
-        b,
-        currentInterlink: List[bytes]):
+
+def calculate_interlink(currentHash: bytes, a, b, currentInterlink: List[bytes]):
     b_half = half_difficulty_number(b)
     interlink = currentInterlink
     currentIndex = 0
@@ -45,6 +47,7 @@ def calculate_interlink(
         currentIndex += 1
 
     return interlink
+
 
 def get_difficulty(hash: bytes):
     leading_zeros = 0
@@ -65,6 +68,7 @@ def get_difficulty(hash: bytes):
             leading_zeros += 2
     return 32, 0
 
+
 @dataclasses.dataclass
 class FortunaState(PlutusData):
     nonce: bytes
@@ -73,6 +77,7 @@ class FortunaState(PlutusData):
     leading_zeroes: int
     difficulty: int
     epoch_time: int
+
 
 @dataclasses.dataclass
 class FortunaParams(PlutusData):
@@ -84,6 +89,7 @@ class FortunaParams(PlutusData):
     real_time_now: int
     message: bytes
     interlink: List[bytes]
+
 
 @dataclasses.dataclass
 class FortunaRedeemer(PlutusData):
@@ -97,9 +103,13 @@ def main(preview: bool):
     network = Network.TESTNET if preview else Network.MAINNET
     # Load chain context
     context = OgmiosChainContext(ogmios_url, network=network, kupo_url=kupo_url)
-    script_utxo = context.utxo_by_tx_id("01751095ea408a3ebe6083b4de4de8a24b635085183ab8a2ac76273ef8fff5dd", 0)
+    script_utxo = context.utxo_by_tx_id(
+        "01751095ea408a3ebe6083b4de4de8a24b635085183ab8a2ac76273ef8fff5dd", 0
+    )
 
-    genesis_path = Path(__file__).parent.parent.parent.joinpath("genesis", f"{'preview' if network == Network.TESTNET else 'mainnet'}.json")
+    genesis_path = Path(__file__).parent.parent.parent.joinpath(
+        "genesis", f"{'preview' if network == Network.TESTNET else 'mainnet'}.json"
+    )
     with genesis_path.open("r") as f:
         genesis = json.load(f)
 
@@ -114,7 +124,9 @@ def main(preview: bool):
     utxo = context.utxos(payment_address)
     balance = sum(u.output.amount.coin for u in utxo)
     if balance < 10_000_000:
-        print(f"Miner address should be funded with at least 10 ADA, currently has {balance / 1_000_000} ADA")
+        print(
+            f"Miner address should be funded with at least 10 ADA, currently has {balance / 1_000_000} ADA"
+        )
         print(f"Send funds to {payment_address} to proceed")
         while balance < 10_000_000:
             utxo = context.utxos(payment_address)
@@ -133,13 +145,26 @@ def main(preview: bool):
             print(f"New block not found in 10 seconds, updating state after {i} tries")
             i = 0
             last_time = time.time()
-            validator_out_ref_new = [u for u in context.utxos(script_address) if u.output.amount.multi_asset.get(script_hash).get(AssetName(b"lord tuna"))][0]
+            validator_out_ref_new = [
+                u
+                for u in context.utxos(script_address)
+                if u.output.amount.multi_asset.get(script_hash).get(
+                    AssetName(b"lord tuna")
+                )
+            ][0]
 
             if validator_out_ref_new != validator_out_ref:
-                validator_out_ref = [u for u in context.utxos(script_address) if
-                                     u.output.amount.multi_asset.get(script_hash).get(AssetName(b"lord tuna"))][0]
+                validator_out_ref = [
+                    u
+                    for u in context.utxos(script_address)
+                    if u.output.amount.multi_asset.get(script_hash).get(
+                        AssetName(b"lord tuna")
+                    )
+                ][0]
 
-                validator_state = FortunaParams.from_cbor(validator_out_ref.output.datum.cbor)
+                validator_state = FortunaParams.from_cbor(
+                    validator_out_ref.output.datum.cbor
+                )
                 assert validator_state is not None, "Datum is missing"
                 target_state = FortunaState(
                     nonce=nonce.to_bytes(16, "big"),
@@ -153,7 +178,8 @@ def main(preview: bool):
         target_hash = sha256(sha256(target_state.to_cbor()).digest()).digest()
         leading_zeroes, difficulty = get_difficulty(target_hash)
         if leading_zeroes > target_state.leading_zeroes or (
-            leading_zeroes == target_state.leading_zeroes and difficulty < target_state.difficulty
+            leading_zeroes == target_state.leading_zeroes
+            and difficulty < target_state.difficulty
         ):
             break
         nonce += 1
@@ -167,10 +193,14 @@ def main(preview: bool):
         validator_state.interlink,
     )
 
-    epoch_time = (validator_state.difficulty) + (realtimenow + 90000) - validator_state.epoch_time
+    epoch_time = (
+        (validator_state.difficulty)
+        + (realtimenow + 90000)
+        - validator_state.epoch_time
+    )
     difficulty_number = validator_state.difficulty
     leading_zeroes = validator_state.leading_zeroes
-    if (validator_state.block_number % 2016 == 0 and validator_state.block_number > 0):
+    if validator_state.block_number % 2016 == 0 and validator_state.block_number > 0:
         adjustment = get_difficulty_adjustment(epoch_time, 1_209_600_000)
         epoch_time = 0
         difficulty_number, leading_zeroes = calculate_difficulty(
