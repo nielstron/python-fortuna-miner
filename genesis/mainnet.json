@@ -7,5 +7,9 @@
   "outRef": {
     "txHash": "21fc8e4f33ca92e38f78f9bbd84cef1c037b15a86665ddba4528c7ecbc60ac90",
     "index": 0
+  },
+  "validatorOutRef": {
+    "txHash": "01751095ea408a3ebe6083b4de4de8a24b635085183ab8a2ac76273ef8fff5dd",
+    "index": 0
   }
 }

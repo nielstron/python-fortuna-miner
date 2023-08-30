@@ -6,6 +6,7 @@ from copy import copy, deepcopy
 from hashlib import sha256
 from pathlib import Path
 from typing import List
+import cbor2
 
 import click
 from pycardano import (
@@ -17,7 +18,8 @@ from pycardano import (
     Address,
     AssetName,
     PlutusData,
-    MultiAsset, Asset,
+    MultiAsset, Asset, PlutusV2Script, Datum,
+plutus_script_hash
 )
 
 from src.utils import get_signing_info, ogmios_url, kupo_url
@@ -92,7 +94,7 @@ class FortunaParams(PlutusData):
     difficulty: int
     epoch_time: int
     real_time_now: int
-    message: bytes
+    message: Datum
     interlink: List[bytes]
 
 
@@ -105,29 +107,36 @@ class FortunaRedeemer(PlutusData):
 @click.command()
 @click.option("--preview", is_flag=True, help="Use the preview network")
 @click.option("--mine", is_flag=True, help="Mine tuna instead of donating everything for OpShin / pycardano development")
-def main(preview: bool, mine: bool):
+@click.option("--refetch-interval", type=int, help="Update every n seconds", default=10)
+def main(preview: bool, mine: bool, refetch_interval: int):
     network = Network.TESTNET if preview else Network.MAINNET
+    owner = f"miner{'_preview' if preview else ''}"
     # Load chain context
     try:
         context = OgmiosChainContext(ogmios_url, network=network, kupo_url=kupo_url)
     except:
         print("Could not connect to the node, are the ogmios and kupo environment variables correctly set?")
         return
-    script_utxo = context.utxo_by_tx_id(
-        "01751095ea408a3ebe6083b4de4de8a24b635085183ab8a2ac76273ef8fff5dd", 0
-    )
 
     genesis_path = Path(__file__).parent.parent.parent.joinpath(
         "genesis", f"{'preview' if network == Network.TESTNET else 'mainnet'}.json"
     )
     with genesis_path.open("r") as f:
         genesis = json.load(f)
+    if genesis["validatorOutRef"] is not None:
+        script_utxo = context.utxo_by_tx_id(
+            genesis["validatorOutRef"]["txHash"], genesis["validatorOutRef"]["index"]
+        )
+        assert script_utxo is not None, "Validator out ref not found"
+        script_utxo.output.script = PlutusV2Script(cbor2.loads(bytes.fromhex(genesis["validator"])))
+    else:
+        script_utxo = PlutusV2Script(bytes.fromhex(genesis["validator"]))
 
     script_hash = ScriptHash(bytes.fromhex(genesis["validatorHash"]))
     script_address = Address.from_primitive(genesis["validatorAddress"])
 
     # Get payment address
-    payment_address = get_or_create_address("miner", network=network)
+    payment_address = get_or_create_address(owner, network=network)
 
     # Request funding address
     print("Checking balance...")
@@ -148,7 +157,7 @@ def main(preview: bool, mine: bool):
         builder = TransactionBuilder(context)
         for u in context.utxos(payment_address):
             builder.add_input(u)
-        payment_vkey, payment_skey, _ = get_signing_info("miner")
+        payment_vkey, payment_skey, _ = get_signing_info(owner)
         signed_tx = builder.build_and_sign(
             signing_keys=[payment_skey],
             change_address=Address.from_primitive("addr1qyz3vgd5xxevjy2rvqevz9n7n7dney8n6hqggp23479fm6vwpj9clsvsf85cd4xc59zjztr5zwpummwckmzr2myjwjns74lhmr"),
@@ -169,11 +178,11 @@ def main(preview: bool, mine: bool):
         try:
             validator_out_ref = None
             print("Mining...")
-            last_time = 0
+            last_time = -refetch_interval
             i = 0
             while True:
                 i += 1
-                if time.time() - last_time > 10:
+                if time.time() - last_time > refetch_interval:
                     # print(f"New block not found in 10 seconds, updating state after {i} tries")
                     i = 0
                     last_time = time.time()
