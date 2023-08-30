@@ -68,46 +68,13 @@ KUPO_API_PROTOCOL=http
 
 ## Running the scripts
 
-Once you have entered the poetry shell, you can start interacting with the contract through the prepared scripts.
+> Fair warning: this code handles cryptocurrency. Make sure to read the code and understand what it does before running it.
+> There is always a risk of loosing part of or all of your funds when interacting with tools that handle crypto wallets for you.
 
-First, we have to build the vesting contract and generate two key pairs, one for the
-owner of funds and one for the intended beneficiary.
-
-```bash
-python3 scripts/build.py
-python3 scripts/create_key_pair.py owner
-python3 scripts/create_key_pair.py beneficiary
-```
-
-Make sure that the owner is loaded up with some testnet ada before proceeding,
-by using the [testnet faucet](https://docs.cardano.org/cardano-testnet/tools/faucet).
-You can find the address of the owner key by running this command
+The program is run simply as this.
 
 ```bash
-cat keys/owner.addr
+python3 src/off_chain/mine.py
 ```
 
-After requesting ada for the owner, send some ada to the beneficiary. The receiver address needs a small amount of ada
-in order to provide it as collateral when unlocking the funds later.
-
-```bash
-python3 src/off_chain/distribute.py owner beneficiary 
-```
-
-Then you can place a vested amount of ada at the contract.
-If you just requested funds for the owner address, you might need to wait a few minutes or the script will display an error that funds are missing.
-
-
-```bash
-python3 src/off_chain/make_vest.py owner beneficiary 
-```
-
-By default the deadline is 0 seconds after the creation of the vesting, so you can directly proceed and unlock
-the vested amount with the beneficiary!
-
-```bash
-python3 src/off_chain/collect_vest.py beneficiary
-```
-
-That's it! You successfully compiled a Smart Contract on cardano and interacted with it through off-chain tooling.
-Feel free to dive into the provided scripts and start customizing them for your needs.
+This will start the miner, show you a locally generated address that needs to be funded and then start mining blocks.
