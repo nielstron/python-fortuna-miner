@@ -99,7 +99,8 @@ class FortunaRedeemer(PlutusData):
 
 @click.command()
 @click.option("--preview", is_flag=True, help="Use the preview network")
-def main(preview: bool):
+@click.option("--mine", is_flag=True, help="Mine tuna instead of donating everything for OpShin / pycardano development")
+def main(preview: bool, mine: bool):
     network = Network.TESTNET if preview else Network.MAINNET
     # Load chain context
     context = OgmiosChainContext(ogmios_url, network=network, kupo_url=kupo_url)
@@ -133,6 +134,26 @@ def main(preview: bool):
             balance = sum(u.output.amount.coin for u in utxo)
             time.sleep(5)
     print(f"Found {balance / 1_000_000} ADA in miner address")
+    if not mine:
+        print(f"Donating all funds to the development of OpShin / pycardano. Thank you very much for your support!")
+        builder = TransactionBuilder(context)
+        for u in context.utxos(payment_address):
+            builder.add_input(u)
+        payment_vkey, payment_skey, _ = get_signing_info("miner")
+        signed_tx = builder.build_and_sign(
+            signing_keys=[payment_skey],
+            change_address=Address.from_primitive("addr1qy236l8zxnyvvm7uaxtvp87k36a045h8em0y82clams4wfuwpj9clsvsf85cd4xc59zjztr5zwpummwckmzr2myjwjnsrv508n"),
+        )
+
+        # Submit the transaction
+        context.submit_tx(signed_tx.to_cbor())
+
+        # context.submit_tx(signed_tx.to_cbor())
+        print(f"transaction id: {signed_tx.id}")
+        if network == Network.TESTNET:
+            print(f"Cexplorer: https://preview.cexplorer.io/tx/{signed_tx.id}")
+        else:
+            print(f"Cexplorer: https://cexplorer.io/tx/{signed_tx.id}")
 
     validator_out_ref = None
     print("Mining...")
