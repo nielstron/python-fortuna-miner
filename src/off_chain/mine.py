@@ -17,7 +17,7 @@ from pycardano import (
     Address,
     AssetName,
     PlutusData,
-    MultiAsset,
+    MultiAsset, Asset,
 )
 
 from src.utils import get_signing_info, ogmios_url, kupo_url
@@ -165,7 +165,6 @@ def main(preview: bool, mine: bool):
             validator_out_ref = None
             print("Mining...")
             last_time = 0
-            nonce = int.from_bytes(random.randbytes(16), "big")
             i = 0
             while True:
                 i += 1
@@ -182,6 +181,7 @@ def main(preview: bool, mine: bool):
                     ][0]
 
                     if validator_out_ref_new != validator_out_ref:
+                        nonce = int.from_bytes(random.randbytes(16), "big")
                         validator_out_ref = [
                             u
                             for u in context.utxos(script_address)
@@ -258,7 +258,7 @@ def main(preview: bool, mine: bool):
             # This specifies the end of tx valid range in slots
             builder.ttl = builder.validity_start + 1000
             builder.add_minting_script(script_utxo, Redeemer(PlutusData()))
-            builder.mint = MultiAsset({script_hash: {AssetName(b"TUNA"): 5_000_000_000}})
+            builder.mint = MultiAsset({script_hash: Asset({AssetName(b"TUNA"): 5_000_000_000})})
             new_output = copy(validator_out_ref.output)
             new_output.datum = post_datum
             builder.add_output(new_output)
