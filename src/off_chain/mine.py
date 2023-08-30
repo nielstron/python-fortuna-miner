@@ -68,9 +68,13 @@ def get_difficulty(hash: bytes):
             leading_zeros += 2
     return 32, 0
 
+@dataclasses.dataclass
+class Unit(PlutusData):
+    CONSTR_ID = 0
 
 @dataclasses.dataclass
 class FortunaState(PlutusData):
+    CONSTR_ID = 0
     nonce: bytes
     block_number: int
     current_hash: bytes
@@ -81,6 +85,7 @@ class FortunaState(PlutusData):
 
 @dataclasses.dataclass
 class FortunaParams(PlutusData):
+    CONSTR_ID = 0
     block_number: int
     current_hash: bytes
     leading_zeroes: int
@@ -257,7 +262,7 @@ def main(preview: bool, mine: bool):
             builder.validity_start = realtimenow
             # This specifies the end of tx valid range in slots
             builder.ttl = builder.validity_start + 1000
-            builder.add_minting_script(script_utxo, Redeemer(PlutusData()))
+            builder.add_minting_script(script_utxo, Redeemer(Unit()))
             builder.mint = MultiAsset({script_hash: Asset({AssetName(b"TUNA"): 5_000_000_000})})
             new_output = deepcopy(validator_out_ref.output)
             new_output.datum = post_datum
