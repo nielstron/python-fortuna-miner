@@ -130,9 +130,10 @@ def main(preview: bool, mine: bool, refetch_interval: int):
         assert script_utxo is not None, "Validator out ref not found"
         script_utxo.output.script = PlutusV2Script(cbor2.loads(bytes.fromhex(genesis["validator"])))
     else:
-        script_utxo = PlutusV2Script(bytes.fromhex(genesis["validator"]))
+        script_utxo = PlutusV2Script(cbor2.loads(bytes.fromhex(genesis["validator"])))
 
     script_hash = ScriptHash(bytes.fromhex(genesis["validatorHash"]))
+    assert script_hash == plutus_script_hash(script_utxo if isinstance(script_utxo, PlutusV2Script) else script_utxo.output.script)
     script_address = Address.from_primitive(genesis["validatorAddress"])
 
     # Get payment address
@@ -227,7 +228,8 @@ def main(preview: bool, mine: bool, refetch_interval: int):
                 nonce += 1
 
             print(f"Found block with nonce {nonce}")
-            realtimenow = int(time.time()) * 1000 - 60000
+            current_block_slot = context.last_block_slot
+            unix_time_now = int(time.time()) * 1000 - 60_000
             interlink = calculate_interlink(
                 target_hash,
                 (leading_zeroes, difficulty),
@@ -237,7 +239,7 @@ def main(preview: bool, mine: bool, refetch_interval: int):
 
             epoch_time = (
                 (validator_state.difficulty)
-                + (realtimenow + 90000)
+                + (unix_time_now + 90_000)
                 - validator_state.epoch_time
             )
             difficulty_number = validator_state.difficulty
@@ -256,7 +258,7 @@ def main(preview: bool, mine: bool, refetch_interval: int):
                 leading_zeroes=leading_zeroes,
                 difficulty=difficulty_number,
                 epoch_time=epoch_time,
-                real_time_now=90_000_000 + realtimenow,
+                real_time_now=90_000_000 + unix_time_now,
                 message=b"AlL HaIl tUnA",
                 interlink=interlink,
             )
@@ -268,9 +270,9 @@ def main(preview: bool, mine: bool, refetch_interval: int):
             builder = TransactionBuilder(context)
             builder.add_script_input(validator_out_ref, script=script_utxo, redeemer=redeemer)
             # we must specify at least the start of the tx valid range in slots
-            builder.validity_start = realtimenow
+            builder.validity_start = current_block_slot
             # This specifies the end of tx valid range in slots
-            builder.ttl = builder.validity_start + 1000
+            builder.ttl = builder.validity_start + 100
             builder.add_minting_script(script_utxo, Redeemer(Unit()))
             builder.mint = MultiAsset({script_hash: Asset({AssetName(b"TUNA"): 5_000_000_000})})
             new_output = deepcopy(validator_out_ref.output)
