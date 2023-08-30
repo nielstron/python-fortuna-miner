@@ -103,7 +103,11 @@ class FortunaRedeemer(PlutusData):
 def main(preview: bool, mine: bool):
     network = Network.TESTNET if preview else Network.MAINNET
     # Load chain context
-    context = OgmiosChainContext(ogmios_url, network=network, kupo_url=kupo_url)
+    try:
+        context = OgmiosChainContext(ogmios_url, network=network, kupo_url=kupo_url)
+    except:
+        print("Could not connect to the node, are the ogmios and kupo environment variables correctly set?")
+        return
     script_utxo = context.utxo_by_tx_id(
         "01751095ea408a3ebe6083b4de4de8a24b635085183ab8a2ac76273ef8fff5dd", 0
     )

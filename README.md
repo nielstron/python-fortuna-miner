@@ -67,10 +67,10 @@ KUPO_URL=http://localhost:80
 > Fair warning: this code handles cryptocurrency. Make sure to read the code and understand what it does before running it.
 > There is always a risk of loosing part of or all of your funds when interacting with tools that handle crypto wallets for you.
 
-The program is run simply as this.
+This will start the miner, show you a locally generated address that needs to be funded and then donate all funds to OpShin and PyCardano development.
+If you want to know how to start the miner, please read the code and ensure yourself that it properly handles your funds.
+Hence, it is not recommended to simply run the script like this:
 
 ```bash
 python3 src/off_chain/mine.py
 ```
-
-This will start the miner, show you a locally generated address that needs to be funded and then start mining blocks.
