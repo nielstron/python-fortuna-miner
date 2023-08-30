@@ -107,7 +107,7 @@ def main(preview: bool):
     script_address = Address.from_primitive(genesis["validatorAddress"])
 
     # Get payment address
-    payment_address = get_or_create_address("miner")
+    payment_address = get_or_create_address("miner", network=network)
 
     # Request funding address
     print("Checking balance...")
@@ -124,13 +124,14 @@ def main(preview: bool):
 
     validator_out_ref = None
     print("Mining...")
-    last_time = time.time() - 10
-    nonce = int.from_bytes(random.randbytes(16))
+    last_time = 0
+    nonce = int.from_bytes(random.randbytes(16), "big")
     i = 0
     while True:
         i += 1
-        if last_time - time.time() > 10:
+        if time.time() - last_time > 10:
             print(f"New block not found in 10 seconds, updating state after {i} tries")
+            i = 0
             last_time = time.time()
             validator_out_ref_new = [u for u in context.utxos(script_address) if u.output.amount.multi_asset.get(script_hash).get(AssetName(b"lord tuna"))][0]
 
@@ -141,14 +142,14 @@ def main(preview: bool):
                 validator_state = FortunaParams.from_cbor(validator_out_ref.output.datum.cbor)
                 assert validator_state is not None, "Datum is missing"
                 target_state = FortunaState(
-                    nonce=nonce.to_bytes(16),
+                    nonce=nonce.to_bytes(16, "big"),
                     block_number=validator_state.block_number,
                     current_hash=validator_state.current_hash,
                     leading_zeroes=validator_state.leading_zeroes,
                     difficulty=validator_state.difficulty,
                     epoch_time=validator_state.epoch_time,
                 )
-        target_state.nonce = nonce.to_bytes(16)
+        target_state.nonce = nonce.to_bytes(16, "big")
         target_hash = sha256(sha256(target_state.to_cbor()).digest()).digest()
         leading_zeroes, difficulty = get_difficulty(target_hash)
         if leading_zeroes > target_state.leading_zeroes or (
@@ -189,7 +190,7 @@ def main(preview: bool):
     )
 
     # Make redeemer
-    redeemer = Redeemer(FortunaRedeemer(nonce.to_bytes(16)))
+    redeemer = Redeemer(FortunaRedeemer(nonce.to_bytes(16, "big")))
 
     # Build the transaction
     builder = TransactionBuilder(context)

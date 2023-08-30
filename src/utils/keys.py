@@ -19,7 +19,7 @@ def get_signing_info(name, network=Network.TESTNET):
     return payment_vkey, payment_skey, payment_address
 
 
-def get_or_create_address(name) -> Address:
+def get_or_create_address(name, network=Network.TESTNET) -> Address:
     keys_dir.mkdir(exist_ok=True)
 
     skey_path = keys_dir.joinpath(f"{name}.skey")
@@ -42,7 +42,6 @@ def get_or_create_address(name) -> Address:
     verification_key = PaymentVerificationKey.from_signing_key(signing_key)
     verification_key.save(str(vkey_path))
 
-    network = Network.TESTNET
     address = Address(payment_part=verification_key.hash(), network=network)
     with open(addr_path, mode="w") as f:
         f.write(str(address))

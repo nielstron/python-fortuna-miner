@@ -57,13 +57,9 @@ If you want to add kupo, use the Kupo Extension as well.
 Make sure the following environment variables are set (defaults are displayed):
 
 ```bash
-OGMIOS_API_HOST=localhost
-OGMIOS_API_PORT=1337
-OGMIOS_API_PROTOCOL=ws
+OGMIOS_URL=ws://localhost:1337
 
-KUPO_API_HOST=None
-KUPO_API_PORT=80
-KUPO_API_PROTOCOL=http
+KUPO_URL=http://localhost:80
 ```
 
 ## Running the scripts
